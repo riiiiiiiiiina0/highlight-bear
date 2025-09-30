@@ -1,6 +1,6 @@
 {
-  "name": "Highlighter Bear",
-  "description": "Highlighter Bear is a chrome extension that allows you to highlight text on any pages.",
+  "name": "Highlight Bear",
+  "description": "Highlight Bear is a chrome extension that allows you to highlight text on any pages.",
   "version": "0.5",
   "manifest_version": 3,
   "icons": {

@@ -770,8 +770,8 @@ class HighlighterBearOptions {
     const name = ruleNameInput.value.trim();
     const urlPattern = urlPatternInput.value.trim();
 
-    if (!name || !urlPattern) {
-      alert('Please fill in all required fields.');
+    if (!name) {
+      alert('Please enter a rule name.');
       return;
     }
 

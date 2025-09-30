@@ -13,7 +13,7 @@ class HighlighterBear {
   }
 
   async init() {
-    console.log('Highlighter Bear: Initializing...');
+    console.log('Highlight Bear: Initializing...');
     await this.loadRules();
     this.checkUrlMatch();
 
@@ -35,14 +35,14 @@ class HighlighterBear {
 
       // Retry again after more time
       setTimeout(() => {
-        console.log('Highlighter Bear: Final retry for dynamic content...');
+        console.log('Highlight Bear: Final retry for dynamic content...');
         this.startHighlighting();
       }, 3000);
 
       this.setupMutationObserver();
       this.listenForRuleChanges();
     } else {
-      console.log('Highlighter Bear: No matching rules for this page');
+      console.log('Highlight Bear: No matching rules for this page');
     }
   }
 
@@ -50,7 +50,7 @@ class HighlighterBear {
     try {
       const result = await chrome.storage.sync.get(['highlighterRules']);
       this.rules = result.highlighterRules || [];
-      console.log('Highlighter Bear: Loaded rules:', this.rules);
+      console.log('Highlight Bear: Loaded rules:', this.rules);
     } catch (error) {
       console.error('Highlighter Bear: Error loading rules:', error);
       this.rules = [];
@@ -59,10 +59,16 @@ class HighlighterBear {
 
   checkUrlMatch() {
     const currentUrl = window.location.href;
-    console.log('Highlighter Bear: Current URL:', currentUrl);
+    console.log('Highlight Bear: Current URL:', currentUrl);
     this.matchingRules = this.rules.filter((rule) => {
       // Only consider enabled rules
       if (!rule.enabled) return false;
+
+      // Empty URL pattern matches all URLs
+      if (!rule.urlPattern || rule.urlPattern.trim() === '') {
+        console.log('Highlight Bear: Rule matched (all URLs):', rule.name);
+        return true;
+      }
 
       // Check if URL matches the pattern
       // The urlPattern can be a simple string that should be included in the URL
@@ -70,14 +76,14 @@ class HighlighterBear {
         // Convert pattern to regex if it's not already
         // Support both simple string matching and regex patterns
         if (currentUrl.includes(rule.urlPattern)) {
-          console.log('Highlighter Bear: Rule matched (string):', rule.name);
+          console.log('Highlight Bear: Rule matched (string):', rule.name);
           return true;
         }
 
         // Try as regex pattern
         const regexPattern = new RegExp(rule.urlPattern);
         if (regexPattern.test(currentUrl)) {
-          console.log('Highlighter Bear: Rule matched (regex):', rule.name);
+          console.log('Highlight Bear: Rule matched (regex):', rule.name);
           return true;
         }
       } catch (e) {
@@ -86,16 +92,16 @@ class HighlighterBear {
       }
       return false;
     });
-    console.log('Highlighter Bear: Matching rules:', this.matchingRules);
+    console.log('Highlight Bear: Matching rules:', this.matchingRules);
   }
 
   startHighlighting() {
     // Apply highlights to the entire document
-    console.log('Highlighter Bear: Starting to scan document.body');
+    console.log('Highlight Bear: Starting to scan document.body');
     // Clear previous highlights to avoid duplicates
     this.clearHighlights();
     this.highlightElement(document.body);
-    console.log('Highlighter Bear: Finished scanning document');
+    console.log('Highlight Bear: Finished scanning document');
   }
 
   highlightElement(element) {
