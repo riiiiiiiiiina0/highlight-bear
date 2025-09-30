@@ -132,7 +132,7 @@ class HighlighterBearOptions {
       });
     }
 
-    // Event delegation for match pattern removal
+    // Event delegation for match pattern removal and toggle buttons
     /** @type {HTMLDivElement | null} */
     const matchPatternsContainer = /** @type {HTMLDivElement | null} */ (
       document.getElementById('matchPatternsContainer')
@@ -149,8 +149,14 @@ class HighlighterBearOptions {
             const patternId = patternRow.dataset.patternId;
             this.removeMatchPattern(patternId);
           }
+        } else if (target && target.dataset.toggle === 'true') {
+          // Toggle button active state
+          target.classList.toggle('btn-active');
         }
       });
+
+      // Setup drag and drop for reordering patterns
+      this.setupPatternDragAndDrop(matchPatternsContainer);
     }
   }
 
@@ -186,6 +192,9 @@ class HighlighterBearOptions {
             textColor: '#000000',
             backgroundColor: '#FFFF00',
             borderRadius: 4,
+            bold: false,
+            italic: false,
+            underline: false,
           },
           {
             value: 'Critical',
@@ -193,6 +202,9 @@ class HighlighterBearOptions {
             textColor: '#FFFFFF',
             backgroundColor: '#FF6B6B',
             borderRadius: 4,
+            bold: true,
+            italic: false,
+            underline: false,
           },
         ],
       },
@@ -208,6 +220,9 @@ class HighlighterBearOptions {
             textColor: '#FFFFFF',
             backgroundColor: '#4F46E5',
             borderRadius: 4,
+            bold: false,
+            italic: true,
+            underline: false,
           },
         ],
       },
@@ -223,6 +238,9 @@ class HighlighterBearOptions {
             textColor: '#FFFFFF',
             backgroundColor: '#10B981',
             borderRadius: 4,
+            bold: false,
+            italic: false,
+            underline: true,
           },
         ],
       },
@@ -238,6 +256,9 @@ class HighlighterBearOptions {
             textColor: '#000000',
             backgroundColor: '#FEF3C7',
             borderRadius: 4,
+            bold: false,
+            italic: false,
+            underline: false,
           },
         ],
       },
@@ -253,6 +274,9 @@ class HighlighterBearOptions {
             textColor: '#FFFFFF',
             backgroundColor: '#F59E0B',
             borderRadius: 4,
+            bold: false,
+            italic: false,
+            underline: false,
           },
         ],
       },
@@ -286,8 +310,16 @@ class HighlighterBearOptions {
   renderRuleRow(rule) {
     const colorDots = rule.matchPatterns
       .map((pattern) => {
-        return `<span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center -ml-1 first:ml-0" 
-                          style="background-color: ${pattern.backgroundColor}; color: ${pattern.textColor}">T</span>`;
+        const styles = [
+          `background-color: ${pattern.backgroundColor}`,
+          `color: ${pattern.textColor}`,
+        ];
+        if (pattern.bold) styles.push('font-weight: bold');
+        if (pattern.italic) styles.push('font-style: italic');
+        if (pattern.underline) styles.push('text-decoration: underline');
+
+        return `<span class="w-6 h-6 rounded-full text-xs flex items-center justify-center -ml-1 first:ml-0" 
+                          style="${styles.join('; ')}">T</span>`;
       })
       .join('');
 
@@ -295,13 +327,13 @@ class HighlighterBearOptions {
             <div class="grid grid-cols-12 gap-4 py-4 items-center hover:bg-gray-50 rounded-lg" data-rule-id="${
               rule.id
             }">
-                <div class="col-span-3">
-                    <div class="font-medium text-gray-900 px-4">${this.escapeHtml(
+                <div class="col-span-2">
+                    <div class="font-medium text-gray-900 px-4 truncate">${this.escapeHtml(
                       rule.name,
                     )}</div>
                 </div>
-                <div class="col-span-3">
-                    <div class="text-gray-600 text-sm font-mono">${this.escapeHtml(
+                <div class="col-span-5">
+                    <div class="text-gray-600 text-sm font-mono truncate">${this.escapeHtml(
                       rule.urlPattern,
                     )}</div>
                 </div>
@@ -310,7 +342,7 @@ class HighlighterBearOptions {
                         ${colorDots}
                     </div>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-1">
                     <label class="cursor-pointer label">
                         <input type="checkbox" class="toggle toggle-primary" ${
                           rule.enabled ? 'checked' : ''
@@ -427,7 +459,7 @@ class HighlighterBearOptions {
   }
 
   /**
-   * @param {{value: string, type: string, textColor: string, backgroundColor: string, borderRadius: number}|null} pattern
+   * @param {{value: string, type: string, textColor: string, backgroundColor: string, borderRadius: number, bold: boolean, italic: boolean, underline: boolean}|null} pattern
    */
   addMatchPattern(pattern = null) {
     /** @type {HTMLDivElement | null} */
@@ -440,15 +472,22 @@ class HighlighterBearOptions {
       'pattern-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
     const patternHtml = `
-            <div class="grid grid-cols-12 gap-3 mb-3 items-center" data-pattern-id="${patternId}">
-                <div class="col-span-4">
+            <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row" data-pattern-id="${patternId}" draggable="true">
+                <div class="col-span-1 flex items-center justify-center">
+                    <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="col-span-2">
                     <input type="text" class="input input-bordered input-sm w-full" 
                            placeholder="Important" value="${
                              pattern ? this.escapeHtml(pattern.value) : ''
                            }" 
                            data-field="value" required>
                 </div>
-                <div class="col-span-3">
+                <div class="col-span-2">
                     <select class="select select-bordered select-sm w-full" data-field="type">
                         <option value="text" ${
                           pattern && pattern.type === 'text' ? 'selected' : ''
@@ -476,6 +515,25 @@ class HighlighterBearOptions {
                              pattern ? pattern.borderRadius : 4
                            }" 
                            data-field="borderRadius">
+                </div>
+                <div class="col-span-2">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-xs ${
+                          pattern && pattern.bold ? 'btn-active' : ''
+                        }" data-field="bold" data-toggle="true" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" class="btn btn-xs ${
+                          pattern && pattern.italic ? 'btn-active' : ''
+                        }" data-field="italic" data-toggle="true" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button type="button" class="btn btn-xs ${
+                          pattern && pattern.underline ? 'btn-active' : ''
+                        }" data-field="underline" data-toggle="true" title="Underline">
+                            <u>U</u>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-span-1">
                     <button type="button" class="btn btn-ghost btn-sm text-red-600 remove-pattern-btn">
@@ -545,6 +603,18 @@ class HighlighterBearOptions {
       const borderRadiusInput = /** @type {HTMLInputElement | null} */ (
         element.querySelector('[data-field="borderRadius"]')
       );
+      /** @type {HTMLButtonElement | null} */
+      const boldBtn = /** @type {HTMLButtonElement | null} */ (
+        element.querySelector('[data-field="bold"]')
+      );
+      /** @type {HTMLButtonElement | null} */
+      const italicBtn = /** @type {HTMLButtonElement | null} */ (
+        element.querySelector('[data-field="italic"]')
+      );
+      /** @type {HTMLButtonElement | null} */
+      const underlineBtn = /** @type {HTMLButtonElement | null} */ (
+        element.querySelector('[data-field="underline"]')
+      );
 
       if (
         !valueInput ||
@@ -560,6 +630,13 @@ class HighlighterBearOptions {
       const textColor = textColorInput.value;
       const backgroundColor = backgroundColorInput.value;
       const borderRadius = parseInt(borderRadiusInput.value);
+      const bold = boldBtn ? boldBtn.classList.contains('btn-active') : false;
+      const italic = italicBtn
+        ? italicBtn.classList.contains('btn-active')
+        : false;
+      const underline = underlineBtn
+        ? underlineBtn.classList.contains('btn-active')
+        : false;
 
       if (value) {
         matchPatterns.push({
@@ -568,6 +645,9 @@ class HighlighterBearOptions {
           textColor,
           backgroundColor,
           borderRadius,
+          bold,
+          italic,
+          underline,
         });
       }
     }
@@ -644,6 +724,90 @@ class HighlighterBearOptions {
       rule.enabled = !rule.enabled;
       this.saveRules();
     }
+  }
+
+  setupPatternDragAndDrop(container) {
+    let draggedElement = null;
+    let placeholder = null;
+
+    container.addEventListener('dragstart', (e) => {
+      if (!e.target) return;
+      const target = /** @type {HTMLElement} */ (e.target);
+      if (target.classList.contains('pattern-row')) {
+        draggedElement = target;
+        target.style.opacity = '0.5';
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+        }
+      }
+    });
+
+    container.addEventListener('dragend', (e) => {
+      if (!e.target) return;
+      const target = /** @type {HTMLElement} */ (e.target);
+      if (target.classList.contains('pattern-row')) {
+        target.style.opacity = '1';
+        draggedElement = null;
+        // Remove placeholder if it exists
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.removeChild(placeholder);
+          placeholder = null;
+        }
+      }
+    });
+
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!draggedElement) return;
+
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+      }
+
+      const target = /** @type {HTMLElement} */ (e.target);
+      const patternRow = target.closest('.pattern-row');
+
+      if (patternRow && patternRow !== draggedElement) {
+        // Create placeholder if it doesn't exist
+        if (!placeholder) {
+          placeholder = document.createElement('div');
+          placeholder.className =
+            'grid grid-cols-12 gap-3 mb-3 items-center h-12 bg-blue-100 border-2 border-dashed border-blue-400 rounded';
+        }
+
+        // Determine if we should insert before or after the target
+        const rect = patternRow.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (e.clientY < midpoint) {
+          // Insert before
+          container.insertBefore(placeholder, patternRow);
+        } else {
+          // Insert after
+          if (patternRow.nextSibling) {
+            container.insertBefore(placeholder, patternRow.nextSibling);
+          } else {
+            container.appendChild(placeholder);
+          }
+        }
+      }
+    });
+
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!draggedElement || !placeholder) return;
+
+      // Insert the dragged element at the placeholder position
+      container.insertBefore(draggedElement, placeholder);
+
+      // Remove placeholder
+      if (placeholder.parentNode) {
+        placeholder.parentNode.removeChild(placeholder);
+      }
+      placeholder = null;
+      draggedElement.style.opacity = '1';
+      draggedElement = null;
+    });
   }
 
   escapeHtml(text) {

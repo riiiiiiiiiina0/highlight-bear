@@ -33,10 +33,10 @@
 
       <!-- Table Header -->
       <div class="grid grid-cols-12 gap-4 pb-4 border-b border-gray-200 mb-1 text-sm font-medium text-gray-600">
-        <div class="col-span-3">Rule Name</div>
-        <div class="col-span-3">URL Pattern</div>
+        <div class="col-span-2">Rule Name</div>
+        <div class="col-span-5">URL Pattern</div>
         <div class="col-span-2">Highlight Color</div>
-        <div class="col-span-2">Enabled</div>
+        <div class="col-span-1">Enabled</div>
         <div class="col-span-2">Actions</div>
       </div>
 
@@ -58,7 +58,7 @@
 
   <!-- Create/Edit Rule Modal -->
   <div id="ruleModal" class="modal">
-    <div class="modal-box max-w-4xl">
+    <div class="modal-box !w-[600px] !max-w-none">
       <div class="flex items-center justify-between mb-6">
         <h3 class="font-bold text-lg" id="modalTitle">Create New Rule</h3>
         <button class="btn btn-sm btn-circle btn-ghost" id="closeRuleModalBtn">✕</button>
@@ -70,7 +70,7 @@
           <label class="label flex-1">
             <span class="label-text font-medium">Rule Name</span>
           </label>
-          <input type="text" id="ruleName" class="input input-bordered !w-[360px]"
+          <input type="text" id="ruleName" class="input input-bordered !w-[450px]"
             placeholder="e.g., Important Keywords" required>
         </div>
 
@@ -79,22 +79,26 @@
           <label class="label flex-1">
             <span class="label-text font-medium">URL Pattern</span>
           </label>
-          <input type="text" id="urlPattern" class="input input-bordered !w-[360px]" placeholder="e.g., *.example.com/*"
+          <input type="text" id="urlPattern" class="input input-bordered !w-[450px]" placeholder="e.g., *.example.com/*"
             required>
         </div>
 
         <!-- Match Patterns Section -->
         <div class="mb-6">
           <h4 class="font-medium text-lg mb-4">Match Patterns</h4>
-          <p class="text-sm text-gray-600 mb-4">Define where and how your highlights should appear.</p>
+          <p class="text-sm text-gray-600 mb-2">Define where and how your highlights should appear.</p>
+          <p class="text-sm text-blue-600 mb-4">💡 Drag to reorder. When patterns overlap, the last one takes priority.
+          </p>
 
           <!-- Match Patterns Header -->
-          <div class="grid grid-cols-12 gap-3 mb-3 text-sm font-medium text-gray-600">
-            <div class="col-span-4">VALUE</div>
-            <div class="col-span-3">TYPE</div>
+          <div class="grid grid-cols-12 gap-1 mb-3 text-sm font-medium text-gray-600">
+            <div class="col-span-1"></div>
+            <div class="col-span-2">VALUE</div>
+            <div class="col-span-2">TYPE</div>
             <div class="col-span-1">TEXT</div>
             <div class="col-span-1">BG</div>
             <div class="col-span-2">RADIUS</div>
+            <div class="col-span-2">STYLE</div>
             <div class="col-span-1"></div>
           </div>
 
