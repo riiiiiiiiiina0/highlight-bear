@@ -25,6 +25,39 @@ class HighlighterBearOptions {
       });
     }
 
+    // Export Rules button
+    /** @type {HTMLButtonElement | null} */
+    const exportRulesBtn = /** @type {HTMLButtonElement | null} */ (
+      document.getElementById('exportRulesBtn')
+    );
+    if (exportRulesBtn) {
+      exportRulesBtn.addEventListener('click', () => {
+        this.exportRules();
+      });
+    }
+
+    // Import Rules button
+    /** @type {HTMLButtonElement | null} */
+    const importRulesBtn = /** @type {HTMLButtonElement | null} */ (
+      document.getElementById('importRulesBtn')
+    );
+    if (importRulesBtn) {
+      importRulesBtn.addEventListener('click', () => {
+        this.importRules();
+      });
+    }
+
+    // Import file input
+    /** @type {HTMLInputElement | null} */
+    const importFileInput = /** @type {HTMLInputElement | null} */ (
+      document.getElementById('importFileInput')
+    );
+    if (importFileInput) {
+      importFileInput.addEventListener('change', (e) => {
+        this.handleImportFile(e);
+      });
+    }
+
     // Add Match Pattern button
     /** @type {HTMLButtonElement | null} */
     const addMatchPatternBtn = /** @type {HTMLButtonElement | null} */ (
@@ -981,6 +1014,124 @@ class HighlighterBearOptions {
     const g = parseInt(hex.substring(3, 5), 16);
     const b = parseInt(hex.substring(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  /**
+   * Export all rules to a JSON file
+   */
+  exportRules() {
+    if (this.rules.length === 0) {
+      alert('No rules to export.');
+      return;
+    }
+
+    const exportData = {
+      rules: this.rules,
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Generate filename with current date
+    const date = new Date().toISOString().split('T')[0];
+    link.download = `highlighter-bear-rules-${date}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Clean up the URL object
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Trigger the file input for importing rules
+   */
+  importRules() {
+    const fileInput = document.getElementById('importFileInput');
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  /**
+   * Handle the imported file
+   * @param {Event} event - The file input change event
+   */
+  async handleImportFile(event) {
+    const input = /** @type {HTMLInputElement} */ (event.target);
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importedData = JSON.parse(text);
+
+      // Validate that it has the correct structure
+      if (!importedData || typeof importedData !== 'object') {
+        alert('Invalid file format. Expected a JSON object.');
+        return;
+      }
+
+      // Check if rules property exists and is an array
+      if (!importedData.rules || !Array.isArray(importedData.rules)) {
+        alert('Invalid file format. Expected a "rules" array in the JSON.');
+        return;
+      }
+
+      const importedRules = importedData.rules;
+
+      // Validate each rule has required fields
+      const isValid = importedRules.every(
+        (rule) =>
+          rule.name &&
+          rule.hasOwnProperty('urlPattern') &&
+          Array.isArray(rule.matchPatterns),
+      );
+
+      if (!isValid) {
+        alert('Invalid rule format in the imported file.');
+        return;
+      }
+
+      // Ask user if they want to replace or merge
+      const shouldReplace = confirm(
+        `Found ${importedRules.length} rule(s) in the file.\n\n` +
+          'Click OK to REPLACE all existing rules, or Cancel to MERGE with existing rules.',
+      );
+
+      if (shouldReplace) {
+        // Replace all rules
+        this.rules = importedRules;
+      } else {
+        // Merge rules - add new ones with unique IDs
+        importedRules.forEach((rule) => {
+          // Generate new unique ID to avoid conflicts
+          rule.id =
+            'rule-' +
+            Date.now() +
+            '-' +
+            Math.random().toString(36).substring(2, 9);
+          this.rules.push(rule);
+        });
+      }
+
+      await this.saveRules();
+      this.renderRules();
+
+      alert(`Successfully imported ${importedRules.length} rule(s).`);
+    } catch (error) {
+      console.error('Error importing rules:', error);
+      alert('Failed to import rules. Please check the file format.');
+    } finally {
+      // Reset the file input so the same file can be imported again
+      input.value = '';
+    }
   }
 }
 

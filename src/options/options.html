@@ -21,9 +21,20 @@
           </div>
           <h1 class="text-2xl font-semibold text-gray-800">Highlighter Bear</h1>
         </div>
-        <button id="newRuleBtn" class="btn btn-primary bg-bear-blue hover:bg-blue-600 border-bear-blue text-white px-6">
-          New Rule
-        </button>
+        <div class="flex items-center gap-2">
+          <button id="importRulesBtn"
+            class="btn btn-outline border-bear-blue text-bear-blue hover:bg-bear-blue hover:text-white px-6">
+            Import
+          </button>
+          <button id="exportRulesBtn"
+            class="btn btn-outline border-bear-blue text-bear-blue hover:bg-bear-blue hover:text-white px-6">
+            Export
+          </button>
+          <button id="newRuleBtn"
+            class="btn btn-primary bg-bear-blue hover:bg-blue-600 border-bear-blue text-white px-6">
+            New Rule
+          </button>
+        </div>
       </div>
     </div>
 
@@ -135,6 +146,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="importFileInput" accept=".json" style="display: none;">
 
   <script src="options.js"></script>
 </body>
