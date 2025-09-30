@@ -1,6 +1,16 @@
 {
-  "name": "Chrome extension template",
-  "description": "This is a simple chrome extension template.",
+  "name": "Highlighter Bear",
+  "description": "Highlighter Bear is a chrome extension that allows you to highlight text on any pages.",
   "version": "0.3",
-  "manifest_version": 3
+  "manifest_version": 3,
+  "icons": {
+    "16": "icons/icon-16x16.png",
+    "32": "icons/icon-32x32.png",
+    "48": "icons/icon-48x48.png",
+    "128": "icons/icon-128x128.png"
+  },
+  "options_page": "src/options/options.html",
+  "permissions": [
+    "storage"
+  ]
 }
