@@ -132,7 +132,7 @@ class HighlighterBearOptions {
       });
     }
 
-    // Event delegation for match pattern removal and toggle buttons
+    // Event delegation for match pattern removal, move, and toggle buttons
     /** @type {HTMLDivElement | null} */
     const matchPatternsContainer = /** @type {HTMLDivElement | null} */ (
       document.getElementById('matchPatternsContainer')
@@ -149,15 +149,100 @@ class HighlighterBearOptions {
             const patternId = patternRow.dataset.patternId;
             this.removeMatchPattern(patternId);
           }
+        } else if (target && target.classList.contains('move-up-pattern-btn')) {
+          /** @type {HTMLElement | null} */
+          const patternRow = target.closest('[data-pattern-id]');
+          if (patternRow) {
+            this.movePatternUp(patternRow);
+          }
+        } else if (
+          target &&
+          target.classList.contains('move-down-pattern-btn')
+        ) {
+          /** @type {HTMLElement | null} */
+          const patternRow = target.closest('[data-pattern-id]');
+          if (patternRow) {
+            this.movePatternDown(patternRow);
+          }
         } else if (target && target.dataset.toggle === 'true') {
           // Toggle button active state
           target.classList.toggle('btn-active');
+        } else if (target && target.classList.contains('color-picker-btn')) {
+          // Color picker button clicked - toggle popover
+          const container = target.closest('.color-picker-container');
+          if (container) {
+            const popover = container.querySelector('.color-picker-popover');
+            if (popover) {
+              // Close all other popovers first
+              document
+                .querySelectorAll('.color-picker-popover')
+                .forEach((p) => {
+                  if (p !== popover) p.classList.add('hidden');
+                });
+              // Toggle this popover
+              popover.classList.toggle('hidden');
+            }
+          }
         }
       });
 
-      // Setup drag and drop for reordering patterns
-      this.setupPatternDragAndDrop(matchPatternsContainer);
+      // Event delegation for color picker hex input changes
+      matchPatternsContainer.addEventListener('input', (e) => {
+        if (!e.target) return;
+        /** @type {HTMLInputElement} */
+        const target = /** @type {HTMLInputElement} */ (e.target);
+
+        if (target.classList.contains('color-picker-hex')) {
+          // Update the button and container color
+          const container = target.closest('.color-picker-container');
+          if (container) {
+            const alphaSlider = container.querySelector('.color-picker-alpha');
+            const button = container.querySelector('.color-picker-btn');
+            const alpha = alphaSlider ? parseFloat(alphaSlider.value) : 1;
+            const rgba = this.hexAlphaToRgba(target.value, alpha);
+
+            if (button) {
+              button.style.backgroundColor = rgba;
+            }
+            container.dataset.color = rgba;
+          }
+        } else if (target.classList.contains('color-picker-alpha')) {
+          // Update the button and container color with new alpha
+          const container = target.closest('.color-picker-container');
+          if (container) {
+            const hexInput = container.querySelector('.color-picker-hex');
+            const button = container.querySelector('.color-picker-btn');
+            const alphaValue = container.querySelector(
+              '.color-picker-alpha-value',
+            );
+            const alpha = parseFloat(target.value);
+
+            if (hexInput && button) {
+              const rgba = this.hexAlphaToRgba(hexInput.value, alpha);
+              button.style.backgroundColor = rgba;
+              container.dataset.color = rgba;
+            }
+
+            if (alphaValue) {
+              alphaValue.textContent = `${Math.round(alpha * 100)}%`;
+            }
+          }
+        }
+      });
     }
+
+    // Global click listener to close color picker popovers when clicking outside
+    document.addEventListener('click', (e) => {
+      const target = /** @type {HTMLElement} */ (e.target);
+      // Don't close if clicking inside a color picker container
+      if (!target.closest('.color-picker-container')) {
+        document
+          .querySelectorAll('.color-picker-popover')
+          .forEach((popover) => {
+            popover.classList.add('hidden');
+          });
+      }
+    });
   }
 
   async loadRules() {
@@ -472,23 +557,16 @@ class HighlighterBearOptions {
       'pattern-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
     const patternHtml = `
-            <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row" data-pattern-id="${patternId}" draggable="true">
-                <div class="col-span-1 flex items-center justify-center">
-                    <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                        </svg>
-                    </div>
-                </div>
+            <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row" data-pattern-id="${patternId}">
                 <div class="col-span-2">
-                    <input type="text" class="input input-bordered input-sm w-full" 
+                    <input type="text" class="input input-ghost input-sm w-full" style="background-color: #f6f6f6"
                            placeholder="Important" value="${
                              pattern ? this.escapeHtml(pattern.value) : ''
                            }" 
                            data-field="value" required>
                 </div>
                 <div class="col-span-2">
-                    <select class="select select-bordered select-sm w-full" data-field="type">
+                    <select class="select select-ghost select-sm w-full" style="background-color: #f6f6f6" data-field="type">
                         <option value="text" ${
                           pattern && pattern.type === 'text' ? 'selected' : ''
                         }>Text</option>
@@ -498,61 +576,183 @@ class HighlighterBearOptions {
                     </select>
                 </div>
                 <div class="col-span-1">
-                    <input type="color" class="w-full h-8 rounded border border-gray-300" 
-                           value="${
-                             pattern ? pattern.textColor : '#000000'
-                           }" data-field="textColor">
+                    <div class="relative color-picker-container" data-field="textColor" data-color="${
+                      pattern ? pattern.textColor : '#000000'
+                    }">
+                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                style="background-color: ${
+                                  pattern ? pattern.textColor : '#000000'
+                                }; display: block;" 
+                                title="Text Color"></button>
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-300" style="min-width: 200px;">
+                            <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
+                                   value="${
+                                     pattern
+                                       ? this.rgbaToHex(pattern.textColor)
+                                       : '#000000'
+                                   }">
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs text-gray-600">Opacity:</label>
+                                <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
+                                       value="${
+                                         pattern
+                                           ? this.getAlpha(pattern.textColor)
+                                           : '1'
+                                       }">
+                                <span class="color-picker-alpha-value text-xs text-gray-600 w-8">${
+                                  pattern
+                                    ? Math.round(
+                                        this.getAlpha(pattern.textColor) * 100,
+                                      )
+                                    : '100'
+                                }%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-span-1">
-                    <input type="color" class="w-full h-8 rounded border border-gray-300" 
-                           value="${
-                             pattern ? pattern.backgroundColor : '#FFFF00'
-                           }" data-field="backgroundColor">
+                    <div class="relative color-picker-container" data-field="backgroundColor" data-color="${
+                      pattern ? pattern.backgroundColor : '#FFFF00'
+                    }">
+                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                                style="background-color: ${
+                                  pattern ? pattern.backgroundColor : '#FFFF00'
+                                }; display: block;" 
+                                title="Background Color"></button>
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-300" style="min-width: 200px;">
+                            <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
+                                   value="${
+                                     pattern
+                                       ? this.rgbaToHex(pattern.backgroundColor)
+                                       : '#FFFF00'
+                                   }">
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs text-gray-600">Opacity:</label>
+                                <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
+                                       value="${
+                                         pattern
+                                           ? this.getAlpha(
+                                               pattern.backgroundColor,
+                                             )
+                                           : '1'
+                                       }">
+                                <span class="color-picker-alpha-value text-xs text-gray-600 w-8">${
+                                  pattern
+                                    ? Math.round(
+                                        this.getAlpha(pattern.backgroundColor) *
+                                          100,
+                                      )
+                                    : '100'
+                                }%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-span-2">
-                    <input type="number" class="input input-bordered input-sm w-full" 
+                    <input type="number" class="input input-ghost input-sm w-full" style="background-color: #f6f6f6"
                            min="0" max="20" value="${
                              pattern ? pattern.borderRadius : 4
                            }" 
                            data-field="borderRadius">
                 </div>
                 <div class="col-span-2">
-                    <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-xs ${
+                    <div class="join">
+                        <button type="button" class="btn btn-sm join-item ${
                           pattern && pattern.bold ? 'btn-active' : ''
                         }" data-field="bold" data-toggle="true" title="Bold">
                             <strong>B</strong>
                         </button>
-                        <button type="button" class="btn btn-xs ${
+                        <button type="button" class="btn btn-sm join-item ${
                           pattern && pattern.italic ? 'btn-active' : ''
                         }" data-field="italic" data-toggle="true" title="Italic">
                             <em>I</em>
                         </button>
-                        <button type="button" class="btn btn-xs ${
+                        <button type="button" class="btn btn-sm join-item ${
                           pattern && pattern.underline ? 'btn-active' : ''
                         }" data-field="underline" data-toggle="true" title="Underline">
                             <u>U</u>
                         </button>
                     </div>
                 </div>
-                <div class="col-span-1">
-                    <button type="button" class="btn btn-ghost btn-sm text-red-600 remove-pattern-btn">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                    </button>
+                <div class="col-span-2">
+                    <div class="join">
+                        <button type="button" class="btn btn-sm join-item move-up-pattern-btn" title="Move Up">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn btn-sm join-item move-down-pattern-btn" title="Move Down">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn btn-sm join-item text-red-600 remove-pattern-btn" title="Delete">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
 
     container.insertAdjacentHTML('beforeend', patternHtml);
+    this.updatePatternButtonStates();
   }
 
   removeMatchPattern(patternId) {
     const element = document.querySelector(`[data-pattern-id="${patternId}"]`);
     if (element) {
       element.remove();
+      this.updatePatternButtonStates();
     }
+  }
+
+  movePatternUp(patternRow) {
+    const previousRow = patternRow.previousElementSibling;
+    if (previousRow && previousRow.classList.contains('pattern-row')) {
+      patternRow.parentNode.insertBefore(patternRow, previousRow);
+      this.updatePatternButtonStates();
+    }
+  }
+
+  movePatternDown(patternRow) {
+    const nextRow = patternRow.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('pattern-row')) {
+      patternRow.parentNode.insertBefore(nextRow, patternRow);
+      this.updatePatternButtonStates();
+    }
+  }
+
+  updatePatternButtonStates() {
+    const patternRows = document.querySelectorAll(
+      '#matchPatternsContainer .pattern-row',
+    );
+
+    patternRows.forEach((row, index) => {
+      const moveUpBtn = row.querySelector('.move-up-pattern-btn');
+      const moveDownBtn = row.querySelector('.move-down-pattern-btn');
+
+      if (moveUpBtn) {
+        if (index === 0) {
+          moveUpBtn.disabled = true;
+          moveUpBtn.classList.add('btn-disabled');
+        } else {
+          moveUpBtn.disabled = false;
+          moveUpBtn.classList.remove('btn-disabled');
+        }
+      }
+
+      if (moveDownBtn) {
+        if (index === patternRows.length - 1) {
+          moveDownBtn.disabled = true;
+          moveDownBtn.classList.add('btn-disabled');
+        } else {
+          moveDownBtn.disabled = false;
+          moveDownBtn.classList.remove('btn-disabled');
+        }
+      }
+    });
   }
 
   saveRule() {
@@ -591,12 +791,12 @@ class HighlighterBearOptions {
       const typeSelect = /** @type {HTMLSelectElement | null} */ (
         element.querySelector('[data-field="type"]')
       );
-      /** @type {HTMLInputElement | null} */
-      const textColorInput = /** @type {HTMLInputElement | null} */ (
+      /** @type {HTMLElement | null} */
+      const textColorContainer = /** @type {HTMLElement | null} */ (
         element.querySelector('[data-field="textColor"]')
       );
-      /** @type {HTMLInputElement | null} */
-      const backgroundColorInput = /** @type {HTMLInputElement | null} */ (
+      /** @type {HTMLElement | null} */
+      const backgroundColorContainer = /** @type {HTMLElement | null} */ (
         element.querySelector('[data-field="backgroundColor"]')
       );
       /** @type {HTMLInputElement | null} */
@@ -619,16 +819,17 @@ class HighlighterBearOptions {
       if (
         !valueInput ||
         !typeSelect ||
-        !textColorInput ||
-        !backgroundColorInput ||
+        !textColorContainer ||
+        !backgroundColorContainer ||
         !borderRadiusInput
       )
         continue;
 
       const value = valueInput.value.trim();
       const type = typeSelect.value;
-      const textColor = textColorInput.value;
-      const backgroundColor = backgroundColorInput.value;
+      const textColor = textColorContainer.dataset.color || '#000000';
+      const backgroundColor =
+        backgroundColorContainer.dataset.color || '#FFFF00';
       const borderRadius = parseInt(borderRadiusInput.value);
       const bold = boldBtn ? boldBtn.classList.contains('btn-active') : false;
       const italic = italicBtn
@@ -726,94 +927,60 @@ class HighlighterBearOptions {
     }
   }
 
-  setupPatternDragAndDrop(container) {
-    let draggedElement = null;
-    let placeholder = null;
-
-    container.addEventListener('dragstart', (e) => {
-      if (!e.target) return;
-      const target = /** @type {HTMLElement} */ (e.target);
-      if (target.classList.contains('pattern-row')) {
-        draggedElement = target;
-        target.style.opacity = '0.5';
-        if (e.dataTransfer) {
-          e.dataTransfer.effectAllowed = 'move';
-        }
-      }
-    });
-
-    container.addEventListener('dragend', (e) => {
-      if (!e.target) return;
-      const target = /** @type {HTMLElement} */ (e.target);
-      if (target.classList.contains('pattern-row')) {
-        target.style.opacity = '1';
-        draggedElement = null;
-        // Remove placeholder if it exists
-        if (placeholder && placeholder.parentNode) {
-          placeholder.parentNode.removeChild(placeholder);
-          placeholder = null;
-        }
-      }
-    });
-
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (!draggedElement) return;
-
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = 'move';
-      }
-
-      const target = /** @type {HTMLElement} */ (e.target);
-      const patternRow = target.closest('.pattern-row');
-
-      if (patternRow && patternRow !== draggedElement) {
-        // Create placeholder if it doesn't exist
-        if (!placeholder) {
-          placeholder = document.createElement('div');
-          placeholder.className =
-            'grid grid-cols-12 gap-3 mb-3 items-center h-12 bg-blue-100 border-2 border-dashed border-blue-400 rounded';
-        }
-
-        // Determine if we should insert before or after the target
-        const rect = patternRow.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-
-        if (e.clientY < midpoint) {
-          // Insert before
-          container.insertBefore(placeholder, patternRow);
-        } else {
-          // Insert after
-          if (patternRow.nextSibling) {
-            container.insertBefore(placeholder, patternRow.nextSibling);
-          } else {
-            container.appendChild(placeholder);
-          }
-        }
-      }
-    });
-
-    container.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (!draggedElement || !placeholder) return;
-
-      // Insert the dragged element at the placeholder position
-      container.insertBefore(draggedElement, placeholder);
-
-      // Remove placeholder
-      if (placeholder.parentNode) {
-        placeholder.parentNode.removeChild(placeholder);
-      }
-      placeholder = null;
-      draggedElement.style.opacity = '1';
-      draggedElement = null;
-    });
-  }
-
   escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Convert RGBA color to hex (ignoring alpha)
+   * @param {string} color - Color in any format
+   * @returns {string} - Hex color
+   */
+  rgbaToHex(color) {
+    // If already hex, return it
+    if (color.startsWith('#')) {
+      return color.substring(0, 7); // Remove alpha if present
+    }
+
+    // Parse rgba/rgb
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+      const r = parseInt(match[1]).toString(16).padStart(2, '0');
+      const g = parseInt(match[2]).toString(16).padStart(2, '0');
+      const b = parseInt(match[3]).toString(16).padStart(2, '0');
+      return `#${r}${g}${b}`;
+    }
+
+    return color;
+  }
+
+  /**
+   * Get alpha value from color
+   * @param {string} color - Color in any format
+   * @returns {number} - Alpha value between 0 and 1
+   */
+  getAlpha(color) {
+    // Check for rgba
+    const match = color.match(/rgba?\([^,]+,[^,]+,[^,]+,?\s*([\d.]+)?\)/);
+    if (match && match[1]) {
+      return parseFloat(match[1]);
+    }
+    return 1; // Default to fully opaque
+  }
+
+  /**
+   * Convert hex and alpha to rgba
+   * @param {string} hex - Hex color
+   * @param {number} alpha - Alpha value
+   * @returns {string} - RGBA color string
+   */
+  hexAlphaToRgba(hex, alpha) {
+    const r = parseInt(hex.substring(1, 3), 16);
+    const g = parseInt(hex.substring(3, 5), 16);
+    const b = parseInt(hex.substring(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 }
 
