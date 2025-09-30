@@ -491,14 +491,14 @@ class HighlighterBearOptions {
     const patternHtml = `
             <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row" data-pattern-id="${patternId}">
                 <div class="col-span-2">
-                    <input type="text" class="input input-ghost input-sm w-full" style="background-color: #f6f6f6"
+                    <input type="text" class="input input-bordered input-sm w-full dark:text-gray-200"
                            placeholder="Important" value="${
                              pattern ? this.escapeHtml(pattern.value) : ''
                            }" 
                            data-field="value" required>
                 </div>
                 <div class="col-span-2">
-                    <select class="select select-ghost select-sm w-full" style="background-color: #f6f6f6" data-field="type">
+                    <select class="select select-bordered select-sm w-full dark:text-gray-200" data-field="type">
                         <option value="text" ${
                           pattern && pattern.type === 'text' ? 'selected' : ''
                         }>Text</option>
@@ -511,12 +511,12 @@ class HighlighterBearOptions {
                     <div class="relative color-picker-container" data-field="textColor" data-color="${
                       pattern ? pattern.textColor : '#000000'
                     }">
-                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
                                 style="background-color: ${
                                   pattern ? pattern.textColor : '#000000'
                                 }; display: block;" 
                                 title="Text Color"></button>
-                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-300" style="min-width: 200px;">
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700" style="min-width: 200px;">
                             <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
                                    value="${
                                      pattern
@@ -524,14 +524,14 @@ class HighlighterBearOptions {
                                        : '#000000'
                                    }">
                             <div class="flex items-center gap-2">
-                                <label class="text-xs text-gray-600">Opacity:</label>
+                                <label class="text-xs text-gray-600 dark:text-gray-400">Opacity:</label>
                                 <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
                                        value="${
                                          pattern
                                            ? this.getAlpha(pattern.textColor)
                                            : '1'
                                        }">
-                                <span class="color-picker-alpha-value text-xs text-gray-600 w-8">${
+                                <span class="color-picker-alpha-value text-xs text-gray-600 dark:text-gray-400 w-8">${
                                   pattern
                                     ? Math.round(
                                         this.getAlpha(pattern.textColor) * 100,
@@ -546,12 +546,12 @@ class HighlighterBearOptions {
                     <div class="relative color-picker-container" data-field="backgroundColor" data-color="${
                       pattern ? pattern.backgroundColor : '#FFFF00'
                     }">
-                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 cursor-pointer" 
+                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
                                 style="background-color: ${
                                   pattern ? pattern.backgroundColor : '#FFFF00'
                                 }; display: block;" 
                                 title="Background Color"></button>
-                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white rounded-lg shadow-lg border border-gray-300" style="min-width: 200px;">
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700" style="min-width: 200px;">
                             <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
                                    value="${
                                      pattern
@@ -559,7 +559,7 @@ class HighlighterBearOptions {
                                        : '#FFFF00'
                                    }">
                             <div class="flex items-center gap-2">
-                                <label class="text-xs text-gray-600">Opacity:</label>
+                                <label class="text-xs text-gray-600 dark:text-gray-400">Opacity:</label>
                                 <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
                                        value="${
                                          pattern
@@ -568,7 +568,7 @@ class HighlighterBearOptions {
                                              )
                                            : '1'
                                        }">
-                                <span class="color-picker-alpha-value text-xs text-gray-600 w-8">${
+                                <span class="color-picker-alpha-value text-xs text-gray-600 dark:text-gray-400 w-8">${
                                   pattern
                                     ? Math.round(
                                         this.getAlpha(pattern.backgroundColor) *
@@ -581,7 +581,7 @@ class HighlighterBearOptions {
                     </div>
                 </div>
                 <div class="col-span-2">
-                    <input type="number" class="input input-ghost input-sm w-full" style="background-color: #f6f6f6"
+                    <input type="number" class="input input-bordered input-sm w-full dark:text-gray-200"
                            min="0" max="20" value="${
                              pattern ? pattern.borderRadius : 4
                            }" 
