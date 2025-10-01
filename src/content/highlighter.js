@@ -318,6 +318,32 @@ class HighlighterBear {
           e,
         );
       }
+    } else if (pattern.type === 'list') {
+      // Comma separated list matching (case-insensitive)
+      const items = pattern.value
+        .split(',')
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+
+      const lowerText = text.toLowerCase();
+
+      items.forEach((searchTerm) => {
+        const searchLower = searchTerm.toLowerCase();
+        let index = 0;
+
+        while (index < text.length) {
+          const foundIndex = lowerText.indexOf(searchLower, index);
+          if (foundIndex === -1) break;
+
+          matches.push({
+            start: foundIndex,
+            end: foundIndex + searchTerm.length,
+            text: text.substring(foundIndex, foundIndex + searchTerm.length),
+          });
+
+          index = foundIndex + searchTerm.length;
+        }
+      });
     }
 
     return matches;

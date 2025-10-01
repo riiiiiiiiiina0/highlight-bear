@@ -492,12 +492,12 @@ class HighlighterBearOptions {
             <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row bg-base-200/50 p-2 rounded-lg" data-pattern-id="${patternId}">
                 <div class="col-span-2">
                     <input type="text" class="input input-bordered input-sm w-full"
-                           placeholder="Important" value="${
+                           placeholder="word, phrase, etc" value="${
                              pattern ? this.escapeHtml(pattern.value) : ''
                            }" 
                            data-field="value" required>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-3">
                     <select class="select select-bordered select-sm w-full" data-field="type">
                         <option value="text" ${
                           pattern && pattern.type === 'text' ? 'selected' : ''
@@ -505,6 +505,9 @@ class HighlighterBearOptions {
                         <option value="regex" ${
                           pattern && pattern.type === 'regex' ? 'selected' : ''
                         }>Regex</option>
+                        <option value="list" ${
+                          pattern && pattern.type === 'list' ? 'selected' : ''
+                        }>Comma separated list</option>
                     </select>
                 </div>
                 <div class="col-span-1">
@@ -580,7 +583,7 @@ class HighlighterBearOptions {
                         </div>
                     </div>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-1">
                     <input type="number" class="input input-bordered input-sm w-full"
                            min="0" max="20" value="${
                              pattern ? pattern.borderRadius : 4
