@@ -1,9 +1,9 @@
 // Function to set the theme based on system preference
 const applyTheme = () => {
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'coffee');
   } else {
-    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.setAttribute('data-theme', 'winter');
   }
 };
 

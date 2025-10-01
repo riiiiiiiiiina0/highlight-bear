@@ -335,27 +335,27 @@ class HighlighterBearOptions {
         if (pattern.italic) styles.push('font-style: italic');
         if (pattern.underline) styles.push('text-decoration: underline');
 
-        return `<span class="w-6 h-6 rounded-full text-xs flex items-center justify-center -ml-1 first:ml-0" 
+        return `<span class="badge badge-lg -ml-4 first:ml-0" 
                           style="${styles.join('; ')}">T</span>`;
       })
       .join('');
 
     return `
-            <div class="grid grid-cols-12 gap-4 py-4 items-center hover:bg-gray-50 rounded-lg" data-rule-id="${
+            <div class="grid grid-cols-12 gap-4 py-4 items-center hover:bg-base-200 rounded-lg transition-colors" data-rule-id="${
               rule.id
             }">
                 <div class="col-span-2">
-                    <div class="font-medium text-gray-900 px-4 truncate">${this.escapeHtml(
+                    <div class="font-semibold px-4 truncate">${this.escapeHtml(
                       rule.name,
                     )}</div>
                 </div>
                 <div class="col-span-5">
-                    <div class="text-gray-600 text-sm font-mono truncate">${this.escapeHtml(
-                      rule.urlPattern,
+                    <div class="text-base-content/70 text-sm font-mono truncate px-2 py-1 bg-base-200 rounded">${this.escapeHtml(
+                      rule.urlPattern || 'All URLs',
                     )}</div>
                 </div>
                 <div class="col-span-2">
-                    <div class="flex flex-wrap">
+                    <div class="flex flex-wrap gap-1">
                         ${colorDots}
                     </div>
                 </div>
@@ -368,12 +368,12 @@ class HighlighterBearOptions {
                 </div>
                 <div class="col-span-2">
                     <div class="flex gap-2">
-                        <button class="btn btn-ghost btn-sm edit-rule-btn">
+                        <button class="btn btn-ghost btn-sm edit-rule-btn" title="Edit">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                         </button>
-                        <button class="btn btn-ghost btn-sm text-red-600 delete-rule-btn">
+                        <button class="btn btn-ghost btn-sm text-error delete-rule-btn" title="Delete">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -489,16 +489,16 @@ class HighlighterBearOptions {
       'pattern-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
     const patternHtml = `
-            <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row" data-pattern-id="${patternId}">
+            <div class="grid grid-cols-12 gap-1 mb-3 items-center pattern-row bg-base-200/50 p-2 rounded-lg" data-pattern-id="${patternId}">
                 <div class="col-span-2">
-                    <input type="text" class="input input-bordered input-sm w-full dark:text-gray-200"
+                    <input type="text" class="input input-bordered input-sm w-full"
                            placeholder="Important" value="${
                              pattern ? this.escapeHtml(pattern.value) : ''
                            }" 
                            data-field="value" required>
                 </div>
                 <div class="col-span-2">
-                    <select class="select select-bordered select-sm w-full dark:text-gray-200" data-field="type">
+                    <select class="select select-bordered select-sm w-full" data-field="type">
                         <option value="text" ${
                           pattern && pattern.type === 'text' ? 'selected' : ''
                         }>Text</option>
@@ -511,27 +511,27 @@ class HighlighterBearOptions {
                     <div class="relative color-picker-container" data-field="textColor" data-color="${
                       pattern ? pattern.textColor : '#000000'
                     }">
-                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+                        <button type="button" class="color-picker-btn w-full h-8 rounded-lg border border-base-300 cursor-pointer shadow-sm"
                                 style="background-color: ${
                                   pattern ? pattern.textColor : '#000000'
                                 }; display: block;" 
                                 title="Text Color"></button>
-                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700" style="min-width: 200px;">
-                            <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-base-100 rounded-lg shadow-xl border border-base-300" style="min-width: 200px;">
+                            <input type="color" class="color-picker-hex w-full h-8 rounded-lg mb-2 cursor-pointer" 
                                    value="${
                                      pattern
                                        ? this.rgbaToHex(pattern.textColor)
                                        : '#000000'
                                    }">
                             <div class="flex items-center gap-2">
-                                <label class="text-xs text-gray-600 dark:text-gray-400">Opacity:</label>
-                                <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
+                                <label class="text-xs text-base-content/70">Opacity:</label>
+                                <input type="range" class="range range-xs color-picker-alpha flex-1" min="0" max="1" step="0.01" 
                                        value="${
                                          pattern
                                            ? this.getAlpha(pattern.textColor)
                                            : '1'
                                        }">
-                                <span class="color-picker-alpha-value text-xs text-gray-600 dark:text-gray-400 w-8">${
+                                <span class="color-picker-alpha-value text-xs text-base-content/70 w-8">${
                                   pattern
                                     ? Math.round(
                                         this.getAlpha(pattern.textColor) * 100,
@@ -546,21 +546,21 @@ class HighlighterBearOptions {
                     <div class="relative color-picker-container" data-field="backgroundColor" data-color="${
                       pattern ? pattern.backgroundColor : '#FFFF00'
                     }">
-                        <button type="button" class="color-picker-btn w-full h-8 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+                        <button type="button" class="color-picker-btn w-full h-8 rounded-lg border border-base-300 cursor-pointer shadow-sm"
                                 style="background-color: ${
                                   pattern ? pattern.backgroundColor : '#FFFF00'
                                 }; display: block;" 
                                 title="Background Color"></button>
-                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700" style="min-width: 200px;">
-                            <input type="color" class="color-picker-hex w-full h-8 rounded mb-2 cursor-pointer" 
+                        <div class="color-picker-popover absolute hidden z-50 mt-2 p-3 bg-base-100 rounded-lg shadow-xl border border-base-300" style="min-width: 200px;">
+                            <input type="color" class="color-picker-hex w-full h-8 rounded-lg mb-2 cursor-pointer" 
                                    value="${
                                      pattern
                                        ? this.rgbaToHex(pattern.backgroundColor)
                                        : '#FFFF00'
                                    }">
                             <div class="flex items-center gap-2">
-                                <label class="text-xs text-gray-600 dark:text-gray-400">Opacity:</label>
-                                <input type="range" class="color-picker-alpha flex-1" min="0" max="1" step="0.01" 
+                                <label class="text-xs text-base-content/70">Opacity:</label>
+                                <input type="range" class="range range-xs color-picker-alpha flex-1" min="0" max="1" step="0.01" 
                                        value="${
                                          pattern
                                            ? this.getAlpha(
@@ -568,7 +568,7 @@ class HighlighterBearOptions {
                                              )
                                            : '1'
                                        }">
-                                <span class="color-picker-alpha-value text-xs text-gray-600 dark:text-gray-400 w-8">${
+                                <span class="color-picker-alpha-value text-xs text-base-content/70 w-8">${
                                   pattern
                                     ? Math.round(
                                         this.getAlpha(pattern.backgroundColor) *
@@ -581,7 +581,7 @@ class HighlighterBearOptions {
                     </div>
                 </div>
                 <div class="col-span-2">
-                    <input type="number" class="input input-bordered input-sm w-full dark:text-gray-200"
+                    <input type="number" class="input input-bordered input-sm w-full"
                            min="0" max="20" value="${
                              pattern ? pattern.borderRadius : 4
                            }" 
@@ -618,7 +618,7 @@ class HighlighterBearOptions {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <button type="button" class="btn btn-sm join-item text-red-600 remove-pattern-btn" title="Delete">
+                        <button type="button" class="btn btn-sm join-item text-error remove-pattern-btn" title="Delete">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
