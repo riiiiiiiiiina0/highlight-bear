@@ -11,6 +11,35 @@ class HighlighterBearOptions {
     await this.loadRules();
     this.setupEventListeners();
     this.renderRules();
+    this.handleNewRuleData();
+  }
+
+  async handleNewRuleData() {
+    const result = await chrome.storage.local.get('newRuleData');
+    if (result.newRuleData) {
+      const { url, title } = result.newRuleData;
+
+      this.openRuleModal();
+
+      /** @type {HTMLInputElement | null} */
+      const ruleNameInput = /** @type {HTMLInputElement | null} */ (
+        document.getElementById('ruleName')
+      );
+      /** @type {HTMLInputElement | null} */
+      const urlPatternInput = /** @type {HTMLInputElement | null} */ (
+        document.getElementById('urlPattern')
+      );
+
+      if (ruleNameInput && title) {
+        ruleNameInput.value = title;
+      }
+      if (urlPatternInput) {
+        urlPatternInput.value = url;
+      }
+
+      // Clear the data from storage
+      await chrome.storage.local.remove('newRuleData');
+    }
   }
 
   setupEventListeners() {
