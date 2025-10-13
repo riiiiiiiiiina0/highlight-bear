@@ -2,7 +2,8 @@
 
 A Chrome extension that allows you to highlight text on any web pages using customizable rules.
 
-![Highlight Bear](docs/poster.jpeg)
+![](docs/c_d9f1c10b89a95099_Image_Generator_jsx_330_generated_image_1_1280x800_text.png)
+![](docs/c_d9f1c10b89a95099_Image_Generator_jsx_330_generated_image_3_1280x800_text.png)
 
 <a href="https://buymeacoffee.com/riiiiiiiiiina" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
