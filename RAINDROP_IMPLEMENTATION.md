@@ -32,7 +32,6 @@ This document describes the Raindrop.io integration implementation for Highlight
 
 - ✅ Auto restore on extension install/update
 - ✅ Auto restore on browser startup
-- ✅ Auto restore every 5 minutes
 - ✅ Auto restore after OAuth login
 - ✅ Silent mode to prevent duplicate notifications
 
@@ -162,11 +161,6 @@ initOAuthListener();
 
 // Auto restore on startup
 executeAutoRestore('startup');
-
-// Setup periodic auto restore (every 5 minutes)
-setInterval(() => {
-  executeAutoRestore('periodic');
-}, 5 * 60 * 1000);
 ```
 
 #### Message Handlers
@@ -283,7 +277,6 @@ Auto restore happens automatically:
 
 - On extension install/update
 - On browser startup
-- Every 5 minutes
 - After OAuth login
 
 ## Testing Guide
@@ -326,12 +319,6 @@ Auto restore happens automatically:
 2. Restart browser
 3. Open options page
 4. Verify rules match Raindrop version
-
-### Test 6: Periodic Auto Restore
-
-1. Make changes in Raindrop
-2. Wait 5 minutes
-3. Verify local rules update automatically
 
 ## Error Handling
 

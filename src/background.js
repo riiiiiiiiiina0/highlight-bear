@@ -15,12 +15,6 @@ initOAuthListener();
 // Auto restore on startup
 executeAutoRestore('startup');
 
-// Setup periodic auto restore (every 5 minutes)
-const AUTO_RESTORE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-setInterval(() => {
-  executeAutoRestore('periodic');
-}, AUTO_RESTORE_INTERVAL_MS);
-
 // ============================================================================
 // Action Button Click Handler
 // ============================================================================
