@@ -10,8 +10,10 @@ class HighlighterBearOptions {
   async init() {
     await this.loadRules();
     this.setupEventListeners();
+    this.setupRaindropListeners();
     this.renderRules();
     this.handleNewRuleData();
+    await this.updateRaindropUI();
   }
 
   async handleNewRuleData() {
@@ -946,6 +948,251 @@ class HighlighterBearOptions {
     const b = parseInt(hex.substring(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
+
+  // ============================================================================
+  // Raindrop Integration
+  // ============================================================================
+
+  /**
+   * Setup Raindrop event listeners
+   */
+  setupRaindropListeners() {
+    // Login button
+    const loginBtn = document.getElementById('raindropLoginBtn');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', () => {
+        this.handleRaindropLogin();
+      });
+    }
+
+    // Logout button
+    const logoutBtn = document.getElementById('raindropLogoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        this.handleRaindropLogout();
+      });
+    }
+
+    // Backup button
+    const backupBtn = document.getElementById('backupToRaindropBtn');
+    if (backupBtn) {
+      backupBtn.addEventListener('click', () => {
+        this.handleBackupToRaindrop();
+      });
+    }
+
+    // Restore button
+    const restoreBtn = document.getElementById('restoreFromRaindropBtn');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        this.handleRestoreFromRaindrop();
+      });
+    }
+
+    // Auto backup toggle
+    const autoBackupToggle = document.getElementById('autoBackupToggle');
+    if (autoBackupToggle) {
+      autoBackupToggle.addEventListener('change', () => {
+        this.handleAutoBackupToggle();
+      });
+    }
+
+    // Listen for storage changes to update UI
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync' && changes.oauthAccessToken) {
+        this.updateRaindropUI();
+      }
+    });
+  }
+
+  /**
+   * Update Raindrop UI based on OAuth status
+   */
+  async updateRaindropUI() {
+    const data = await chrome.storage.sync.get([
+      'oauthAccessToken',
+      'autoBackupEnabled',
+    ]);
+
+    const isLoggedIn = !!data.oauthAccessToken;
+
+    // Update status badge and text
+    const statusBadge = document.getElementById('oauthStatusBadge');
+    const statusText = document.getElementById('oauthStatusText');
+
+    if (statusBadge && statusText) {
+      if (isLoggedIn) {
+        statusBadge.textContent = 'Connected';
+        statusBadge.className = 'badge badge-lg badge-success';
+        statusText.textContent = 'Connected to Raindrop.io';
+      } else {
+        statusBadge.textContent = 'Disconnected';
+        statusBadge.className = 'badge badge-lg';
+        statusText.textContent = 'Not connected';
+      }
+    }
+
+    // Toggle login/logout buttons
+    const loginBtn = document.getElementById('raindropLoginBtn');
+    const logoutBtn = document.getElementById('raindropLogoutBtn');
+
+    if (loginBtn && logoutBtn) {
+      if (isLoggedIn) {
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+      } else {
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+      }
+    }
+
+    // Enable/disable backup/restore buttons
+    const backupBtn = document.getElementById('backupToRaindropBtn');
+    const restoreBtn = document.getElementById('restoreFromRaindropBtn');
+
+    if (backupBtn) {
+      backupBtn.disabled = !isLoggedIn;
+    }
+    if (restoreBtn) {
+      restoreBtn.disabled = !isLoggedIn;
+    }
+
+    // Enable/disable auto backup toggle
+    const autoBackupToggle = document.getElementById('autoBackupToggle');
+    if (autoBackupToggle) {
+      autoBackupToggle.disabled = !isLoggedIn;
+      autoBackupToggle.checked = data.autoBackupEnabled || false;
+    }
+  }
+
+  /**
+   * Handle Raindrop login
+   */
+  handleRaindropLogin() {
+    const extensionId = chrome.runtime.id;
+    const state = JSON.stringify({ extensionId });
+    const encodedState = encodeURIComponent(state);
+    const oauthUrl = `https://ohauth.vercel.app/oauth/raindrop?state=${encodedState}`;
+
+    // Open OAuth page in new tab
+    chrome.tabs.create({ url: oauthUrl });
+  }
+
+  /**
+   * Handle Raindrop logout
+   */
+  async handleRaindropLogout() {
+    if (!confirm('Are you sure you want to logout from Raindrop.io?')) {
+      return;
+    }
+
+    await chrome.storage.sync.set({
+      oauthAccessToken: null,
+      oauthRefreshToken: null,
+      oauthExpiresAt: null,
+      autoBackupEnabled: false,
+    });
+
+    alert('Logged out successfully!');
+    await this.updateRaindropUI();
+  }
+
+  /**
+   * Handle backup to Raindrop
+   */
+  async handleBackupToRaindrop() {
+    const backupBtn = document.getElementById('backupToRaindropBtn');
+    if (!backupBtn) return;
+
+    // Show loading state
+    const originalHTML = backupBtn.innerHTML;
+    backupBtn.disabled = true;
+    backupBtn.innerHTML =
+      '<span class="loading loading-spinner loading-sm"></span> Backing up...';
+
+    try {
+      // Send message to background script
+      const response = await chrome.runtime.sendMessage({
+        action: 'backup_to_raindrop',
+      });
+
+      if (response?.success) {
+        alert('✓ ' + response.message);
+      } else {
+        alert('✗ ' + (response.message || 'Backup failed'));
+      }
+    } catch (error) {
+      alert('✗ Backup failed: ' + error.message);
+    } finally {
+      // Restore button state
+      backupBtn.disabled = false;
+      backupBtn.innerHTML = originalHTML;
+    }
+  }
+
+  /**
+   * Handle restore from Raindrop
+   */
+  async handleRestoreFromRaindrop() {
+    if (
+      !confirm(
+        'This will replace all your current rules with the ones from Raindrop. Continue?',
+      )
+    ) {
+      return;
+    }
+
+    const restoreBtn = document.getElementById('restoreFromRaindropBtn');
+    if (!restoreBtn) return;
+
+    // Show loading state
+    const originalHTML = restoreBtn.innerHTML;
+    restoreBtn.disabled = true;
+    restoreBtn.innerHTML =
+      '<span class="loading loading-spinner loading-sm"></span> Restoring...';
+
+    try {
+      // Send message to background script
+      const response = await chrome.runtime.sendMessage({
+        action: 'restore_from_raindrop',
+      });
+
+      if (response?.success) {
+        alert('✓ ' + response.message);
+
+        // Reload rules to reflect changes
+        await this.loadRules();
+        this.renderRules();
+      } else {
+        alert('✗ ' + (response.message || 'Restore failed'));
+      }
+    } catch (error) {
+      alert('✗ Restore failed: ' + error.message);
+    } finally {
+      // Restore button state
+      restoreBtn.disabled = false;
+      restoreBtn.innerHTML = originalHTML;
+    }
+  }
+
+  /**
+   * Handle auto backup toggle
+   */
+  async handleAutoBackupToggle() {
+    const autoBackupToggle = document.getElementById('autoBackupToggle');
+    if (!autoBackupToggle) return;
+
+    await chrome.storage.sync.set({
+      autoBackupEnabled: autoBackupToggle.checked,
+    });
+
+    console.log(
+      'Auto backup:',
+      autoBackupToggle.checked ? 'enabled' : 'disabled',
+    );
+  }
+
+  // ============================================================================
 
   /**
    * Export all rules to a JSON file

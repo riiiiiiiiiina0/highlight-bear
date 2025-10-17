@@ -13,10 +13,21 @@
   "options_page": "src/options/options.html",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "notifications"
   ],
+  "host_permissions": [
+    "https://api.raindrop.io/*",
+    "https://ohauth.vercel.app/*"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://ohauth.vercel.app/*"
+    ]
+  },
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   "action": {
     "default_icon": {
