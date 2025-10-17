@@ -4,6 +4,11 @@
  */
 
 import { backupRulesToRaindrop } from './raindropBackup.js';
+import {
+  showBackupInProgressBadge,
+  showBackupSuccessBadge,
+  showBackupFailureBadge,
+} from './badge.js';
 
 // Configuration
 const BACKUP_DEBOUNCE_MS = 5000; // 5 seconds
@@ -123,42 +128,4 @@ export function cancelScheduledBackup() {
     backupTimeoutId = null;
   }
   cancelOngoingBackup();
-}
-
-// ============================================================================
-// Badge Indicators
-// ============================================================================
-
-/**
- * Show backup in progress badge
- */
-function showBackupInProgressBadge() {
-  chrome.action.setBadgeText({ text: '⟳' });
-  chrome.action.setBadgeBackgroundColor({ color: '#FFA500' }); // Orange
-}
-
-/**
- * Show backup success badge
- */
-function showBackupSuccessBadge() {
-  chrome.action.setBadgeText({ text: '✓' });
-  chrome.action.setBadgeBackgroundColor({ color: '#00AA00' }); // Green
-
-  // Clear after 3 seconds
-  setTimeout(() => {
-    chrome.action.setBadgeText({ text: '' });
-  }, 3000);
-}
-
-/**
- * Show backup failure badge
- */
-function showBackupFailureBadge() {
-  chrome.action.setBadgeText({ text: '✗' });
-  chrome.action.setBadgeBackgroundColor({ color: '#FF0000' }); // Red
-
-  // Clear after 5 seconds
-  setTimeout(() => {
-    chrome.action.setBadgeText({ text: '' });
-  }, 5000);
 }

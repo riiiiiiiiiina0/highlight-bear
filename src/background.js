@@ -4,6 +4,11 @@ import {
   restoreRulesFromRaindrop,
 } from './modules/raindropBackup.js';
 import { scheduleAutoBackup } from './modules/autoBackup.js';
+import {
+  showBackupInProgressBadge,
+  showBackupSuccessBadge,
+  showBackupFailureBadge,
+} from './modules/badge.js';
 
 // ============================================================================
 // Initialization
@@ -51,9 +56,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'backup_to_raindrop') {
     (async () => {
       try {
+        // Show in-progress indicator
+        showBackupInProgressBadge();
+
         const result = await backupRulesToRaindrop();
+
+        // Update badge based on result
+        if (result.success) {
+          showBackupSuccessBadge();
+        } else {
+          showBackupFailureBadge();
+        }
+
         sendResponse(result);
       } catch (error) {
+        // Show failure badge
+        showBackupFailureBadge();
+
         sendResponse({
           success: false,
           message: `Backup failed: ${error.message}`,
